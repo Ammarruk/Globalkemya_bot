@@ -58,9 +58,7 @@ if not GROQ_API_KEY: missing_creds.append("GROQ_API_KEY")
 if missing_creds:
     st.error(f"🚨 Missing credentials in .env: {', '.join(missing_creds)}")
     st.info("💡 Create `.env` file:")
-    st.code("""VALID_USERNAME=Globalkemya
-VALID_PASSWORD=Global123
-GROQ_API_KEY=gsk_your_key_here""")
+    
     st.stop()
 
 # Initialize Groq client
