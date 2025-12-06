@@ -5,7 +5,7 @@
 ║   AUTO-UPDATING CHROMEDRIVER                                   ║
 ║   PERSISTENT BROWSER SESSION                                   ║
 ║   FIXED COMPANY NAME EXTRACTION                                ║
-║   USER AUTHENTICATION                                          ║
+║   SECURE .env CREDENTIALS                                      ║
 ╚════════════════════════════════════════════════════════════════╝
 """
 import streamlit as st
@@ -29,16 +29,54 @@ import datetime
 import json
 import warnings
 
-# Suppress warnings
+# Suppress warnings FIRST
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
 
+# ==================== LOAD .env SECURELY (FIRST) ====================
+load_dotenv()
 
-# ==================== CREDENTIALS ====================
-VALID_USERNAME = "Globalkemya"
-VALID_PASSWORD = "Global@123"
+# ==================== SECURE CREDENTIALS FROM .env ====================
+VALID_USERNAME = os.getenv("VALID_USERNAME")
+VALID_PASSWORD = os.getenv("VALID_PASSWORD")
+LOGIN_EMAIL = os.getenv("LOGIN_EMAIL", "patel@globalkemya.com")
+APP_PASSWORD = os.getenv("APP_PASSWORD")
+EMAIL = os.getenv("EMAIL")
+IMAP_SERVER = os.getenv("IMAP_SERVER", "imap.gmail.com")
+IMAP_PORT = os.getenv("IMAP_PORT", 993)
+OTP_SENDER_EMAIL = os.getenv("OTP_SENDER_EMAIL", "noreply@volza.com")
+OTP_SUBJECT_KEYWORD = os.getenv("OTP_SUBJECT_KEYWORD", "Your OTP for Secure Login")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+# Validate critical credentials
+missing_creds = []
+if not VALID_USERNAME: missing_creds.append("VALID_USERNAME")
+if not VALID_PASSWORD: missing_creds.append("VALID_PASSWORD") 
+if not GROQ_API_KEY: missing_creds.append("GROQ_API_KEY")
+
+if missing_creds:
+    st.error(f"🚨 Missing credentials in .env: {', '.join(missing_creds)}")
+    st.info("💡 Create `.env` file:")
+    st.code("""VALID_USERNAME=Globalkemya
+VALID_PASSWORD=Global123
+GROQ_API_KEY=gsk_your_key_here""")
+    st.stop()
+
+# Initialize Groq client
+client = Groq(api_key=GROQ_API_KEY)
+
+# ==================== CONFIGURATION ====================
+MEMORY_FILE = "volza_ai_memory.json"
+DATA_FILE = "data.txt"
+EXTRACTED_DATA_FILE = "extracted_data.txt"
+VECTOR_DB_DIR = "./volza_knowledge_base"
+COLLECTION_NAME = "volza_trade_intelligence"
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 100
+LLAMA4_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+
+print(f"✅ Credentials loaded: {VALID_USERNAME[:4]}****")
 
 # ==================== AUTO-UPDATE CHROMEDRIVER FUNCTION ====================
 def get_chrome_version():
@@ -67,7 +105,6 @@ def get_chrome_version():
     
     return None
 
-
 def clear_uc_cache():
     """Clear undetected_chromedriver cache to force fresh driver download"""
     cache_paths = [
@@ -83,7 +120,6 @@ def clear_uc_cache():
                 print(f"✅ Cleared UC cache: {cache_path}")
             except Exception as e:
                 print(f"⚠️ Could not clear cache {cache_path}: {e}")
-
 
 def get_uc_driver_with_auto_update(chrome_options=None, max_retries=2):
     """
@@ -133,32 +169,6 @@ def get_uc_driver_with_auto_update(chrome_options=None, max_retries=2):
     
     raise Exception("Failed to initialize ChromeDriver after all retries")
 
-
-# ==================== REST OF YOUR IMPORTS ====================
-# Load Environment Variables
-load_dotenv()
-
-# Configuration
-LOGIN_EMAIL = "patel@globalkemya.com"
-APP_PASSWORD = os.getenv("APP_PASSWORD")
-EMAIL = os.getenv("EMAIL")
-IMAP_SERVER = os.getenv("IMAP_SERVER", "imap.gmail.com")
-IMAP_PORT = os.getenv("IMAP_PORT", 993)
-OTP_SENDER_EMAIL = "noreply@volza.com"
-OTP_SUBJECT_KEYWORD = "Your OTP for Secure Login"
-
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-client = Groq(api_key=GROQ_API_KEY)
-MEMORY_FILE = "volza_ai_memory.json"
-DATA_FILE = "data.txt"
-EXTRACTED_DATA_FILE = "extracted_data.txt"
-
-# RAG Configuration
-VECTOR_DB_DIR = "./volza_knowledge_base"
-COLLECTION_NAME = "volza_trade_intelligence"
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 100
-LLAMA4_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 
 # ==================== LAZY LOADING FUNCTIONS ====================
