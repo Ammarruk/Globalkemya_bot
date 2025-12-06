@@ -8,7 +8,6 @@
 ║   USER AUTHENTICATION                                          ║
 ╚════════════════════════════════════════════════════════════════╝
 """
-
 import streamlit as st
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -1872,3 +1871,4 @@ if __name__ == "__main__":
         show_login_page()
     else:
         show_main_app()
+
